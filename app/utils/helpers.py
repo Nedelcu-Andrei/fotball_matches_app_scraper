@@ -1,10 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import List
-
-import ipdb
+import re
 from dotenv import load_dotenv
-from requests.models import REDIRECT_STATI
-
 from app.data.models import Game, Odds
 from app.utils.logger import logger as log
 import os
@@ -58,6 +55,11 @@ def get_status_code_err(status_code: int) -> str:
     return f"{status_code} Error while requesting. Please check!"
 
 
+def is_woman_game(data: str) -> bool:
+    """ Returns true if game is in women's league, else false """
+    return bool(re.search(r"-women\s?", data))
+
+
 def format_matches_data(matches: List[Game], odds: List[Odds]) -> str | None:
     """ Adds the odds to the matches data then converts them into a string """
     try:
@@ -75,10 +77,12 @@ def format_matches_data(matches: List[Game], odds: List[Odds]) -> str | None:
                 # Append match without odds.
                 lines.append(f"{match.home} vs {match.away} at {match.time[1]} in {match.tournament}.")
 
+        log.info(f"Successfully fetched and formatted data!")
         return "\n".join(lines)
 
-    except TypeError as err:
-        log.error(f"TypeError in format_matches_data: {err}")
-        return GOT_ERROR_MSG
+    except (TypeError, ValueError) as err:
+        log.error(f"Error while formatting matches: {err!r}")
+        log.info(f"Errors found while running the APP, sending Error message...")
+        return GOT_ERROR_MSG  # Message sent to telegram for notification
 
 

@@ -75,7 +75,7 @@ def save_raw_data(data: str | dict, name: str = "data") -> None:
 
     except (TypeError, ValueError) as err:
         # JSON encoding failed (likely unserializable structure)
-        log.error(f"JSON save failed: {err}. Falling back to text format.")
+        log.error(f"JSON save failed: {err!r}. Falling back to text format.")
 
     # -------------------------------
     # FALLBACK TO PLAIN TEXT
@@ -87,4 +87,21 @@ def save_raw_data(data: str | dict, name: str = "data") -> None:
         log.info(f"Raw data saved as plain text: {txt_file.name}")
 
     except Exception as err:
-        log.error(f"Failed to save raw data as text file: {err}")
+        log.error(f"Failed to save raw data as text file: {err!r}")
+
+
+def _get_mock(name: str) -> dict | None:
+    """ Returns a mock of the games and odds data (raw_JSONS) """
+    path = get_raw_data_cache_file(name)
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            raw_mock_data = json.load(f)
+    except Exception as err:
+        log.error(f"Failed to load mock data for {name}: {err!r}")
+        return None
+
+    if isinstance(raw_mock_data, dict) and "data" in raw_mock_data:
+        return raw_mock_data["data"] #unwrap normalized data
+
+    return raw_mock_data

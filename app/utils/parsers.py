@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List
-from app.utils.helpers import format_time, fractional_to_decimal
+from app.utils.helpers import format_time, fractional_to_decimal, is_woman_game
 from app.utils.logger import logger as log
 from app.data.models import Game, Odds
 from app.utils.validators import validate_start_timestamp
@@ -14,13 +14,15 @@ def parse_games(data: dict, important_teams: set[str]) -> List[Game] | None:
     try:
         games_today: List[Game] = []
         today_date = datetime.today().strftime("%Y-%m-%d")
-
         for event in data["events"]:
             home = event["homeTeam"]["name"]
             away = event["awayTeam"]["name"]
 
             if home in important_teams or away in important_teams:
-                if validate_start_timestamp(event["startTimestamp"]):
+                if is_woman_game(event["tournament"]["slug"]): # Filter matches from the women leagues
+                    continue
+
+                if validate_start_timestamp(event["startTimestamp"]):  # Validate the start time format
                     start_time = format_time(event["startTimestamp"])
 
                     if start_time[0] != today_date:  # Filter the games from other days
@@ -37,11 +39,11 @@ def parse_games(data: dict, important_teams: set[str]) -> List[Game] | None:
         return games_today
 
     except (TypeError, ValueError) as err:
-        log.error(f"Error while parsing games: {err}")
+        log.error(f"Error while parsing games: {err!r}")
         return None
 
     except Exception as err:
-        log.error(f"Unexpected error while parsing games: {err}")
+        log.error(f"Unexpected error while parsing games: {err!r}")
         return None
 
 
@@ -71,9 +73,9 @@ def parse_odds(odds_data: dict, games_data: List[Game]) -> List[Odds] | None:
         return parsed_odds
 
     except (TypeError, ValueError) as err:
-        log.error(f"Error while parsing odds: {err}")
+        log.error(f"Error while parsing odds: {err!r}")
         return None
 
     except Exception as err:
-        log.error(f"Unexpected error while parsing odds: {err}")
+        log.error(f"Unexpected error while parsing odds: {err!r}")
         return None

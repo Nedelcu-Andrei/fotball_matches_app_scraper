@@ -6,7 +6,7 @@ from app.data.teams import IMPORTANT_TEAMS
 
 
 def main() -> None:
-    client = ApiClient(IMPORTANT_TEAMS)
+    client = ApiClient(IMPORTANT_TEAMS, use_mock=True)  # add parameter use_mock=True for testing
     data = client.get_matches(API_SPORTS, API_SPORTS_ODDS)
     if not data:
         send_telegram_message(f"No important matches for today: {TODAY}")

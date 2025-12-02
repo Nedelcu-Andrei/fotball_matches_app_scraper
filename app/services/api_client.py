@@ -5,7 +5,7 @@ from curl_cffi import requests
 from app.data.models import Game, Odds
 from app.utils.helpers import USER_AGENT, GOT_ERROR_MSG
 from app.utils.helpers import format_matches_data, get_status_code_err
-from app.utils.cache import load_cache, save_cache, save_raw_data
+from app.utils.cache import load_cache, save_cache, save_raw_data, _get_mock
 from app.utils.logger import logger as log
 from app.utils.parsers import parse_games, parse_odds
 
@@ -14,7 +14,8 @@ from app.utils.parsers import parse_games, parse_odds
 ########################################## "::" = Otherwise ##########################################
 class ApiClient:
     """ Calls the API ENDPOINT for all the Leagues and Competitions """
-    def __init__(self, important_games) -> None:
+    def __init__(self, important_games, use_mock: bool = False) -> None:
+        self.use_mock = use_mock
         self.headers = {
             'User-Agent': USER_AGENT,
         }
@@ -55,6 +56,10 @@ class ApiClient:
     # -----------------------------
     def fetch_fixtures_data(self, url: str) -> dict | None:
         """ Fetches the fixtures data from the given API Endpoint(url) """
+        if self.use_mock:
+            log.info(f"Using MOCK fixtures data...")
+            return _get_mock("games")
+
         raw_fixtures_data = self._get(url)
         save_raw_data(raw_fixtures_data, name="games")
 
@@ -63,6 +68,10 @@ class ApiClient:
 
     def fetch_odds_data(self, url: str) -> dict | None:
         """ Fetches the odds data from the given API Endpoint(url) """
+        if self.use_mock:
+            log.info(f"Using MOCK odds data...")
+            return _get_mock("odds")
+
         raw_odds_data = self._get(url)
         save_raw_data(raw_odds_data, name="odds")
 
@@ -74,10 +83,11 @@ class ApiClient:
     # -----------------------------
     def get_matches(self, games_url: str, odds_url: str) -> str | None:
         """ Fetch the games data from the CACHE if there's any :: Gather and format new data """
-        cached_data = self.check_cache()
-        if cached_data:
-            log.info(f"Returning games from CACHE...")
-            return cached_data
+        if not self.use_mock:
+            cached_data = self.check_cache()
+            if cached_data:
+                    log.info(f"Returning games from CACHE...")
+                    return cached_data
 
         log.info("Fetching and parsing fixtures...")
         parsed_games = self._fetch_and_parse_games(games_url)
@@ -91,8 +101,8 @@ class ApiClient:
         if not formatted_matches:
             log.info(f"No important games found for today - {self.today} -.")
 
+        # Save data to CACHE
         save_cache(formatted_matches)
-        log.info(f"Successfully fetched data and saved to cache!")
 
         return formatted_matches
 
@@ -118,7 +128,7 @@ class ApiClient:
         if cached_date == self.today:  ## If cached data matches today date, reuse it
             if not cached_data: # If cache exists but there are no games
                 log.info(f"No important games found in CACHE for today - {self.today} -.")
-            elif cached_data == GOT_ERROR_MSG:
+            elif cached_data == GOT_ERROR_MSG and not self.use_mock:
                 log.info(f"Errors found in CACHE, fetching new data...")
                 return None    # Resume to obtaining and parsing data
             return cached_data
