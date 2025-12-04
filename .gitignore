@@ -1,1 +1,23 @@
+# IDE
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+app/cache/
+dist/cache/
+
+# Builds
+dist/
+build/
+*.exe
+*.spec
+
+# Other unwanted stuff
+icons/
 .env
+.DS_Store
