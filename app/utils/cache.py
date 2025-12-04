@@ -90,7 +90,7 @@ def save_raw_data(data: str | dict, name: str = "data") -> None:
         log.error(f"Failed to save raw data as text file: {err!r}")
 
 
-def _get_mock(name: str) -> dict | None:
+def get_mock(name: str) -> dict | None:
     """ Returns a mock of the games and odds data (raw_JSONS) """
     path = get_raw_data_cache_file(name)
 

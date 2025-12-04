@@ -5,7 +5,7 @@ from curl_cffi import requests
 from app.data.models import Game, Odds
 from app.utils.helpers import USER_AGENT, GOT_ERROR_MSG
 from app.utils.helpers import format_matches_data, get_status_code_err
-from app.utils.cache import load_cache, save_cache, save_raw_data, _get_mock
+from app.utils.cache import load_cache, save_cache, save_raw_data, get_mock
 from app.utils.logger import logger as log
 from app.utils.parsers import parse_games, parse_odds
 
@@ -58,7 +58,7 @@ class ApiClient:
         """ Fetches the fixtures data from the given API Endpoint(url) """
         if self.use_mock:
             log.info(f"Using MOCK fixtures data...")
-            return _get_mock("games")
+            return get_mock("games")
 
         raw_fixtures_data = self._get(url)
         save_raw_data(raw_fixtures_data, name="games")
@@ -70,7 +70,7 @@ class ApiClient:
         """ Fetches the odds data from the given API Endpoint(url) """
         if self.use_mock:
             log.info(f"Using MOCK odds data...")
-            return _get_mock("odds")
+            return get_mock("odds")
 
         raw_odds_data = self._get(url)
         save_raw_data(raw_odds_data, name="odds")
