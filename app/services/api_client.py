@@ -22,7 +22,7 @@ class ApiClient:
         self.today = datetime.today().strftime("%Y-%m-%d")
         self.important_games = important_games
 
-        log.info("ApiClient initialized.")
+        log.info("ApiClient initialized.") if not self.use_mock else log.info("ApiClient initialized in MOCK mode.")
 
     # -----------------------------
     # INTERNAL NETWORK HELPER
